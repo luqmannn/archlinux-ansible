@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+  - name: Update the repository databases and upgrade the system packages.
+    pacman:
+      update_cache: yes
+      upgrade: yes
+
+  - name: Remove some xfce4 package
+    pacman:
+      name: mousepad,parole,xfburn,xfce4-xkb-plugin,xfce4-dict,xfce4-mailwatch-plugin,xfce4-notes-plugin,xfce4-taskmanager
+      state: absent
+
+  - name: Install package dependency for waldl
+    package:
+      name:
+        - jq
+        - curl
+        - dmenu
+
+  - name: Install additional packages
+    package:
+        - binutils
+        - usbutils
+        - net-tools
+        - traceroute
+        - zip
+        - unzip
+        - unrar
+        - which
+        - mlocate
+        - man-db
+        - tldr
+        - arch-audit
+        - bash-completion
+        - neofetch
+        - asciinema
+        - terminus-font
+        - nano-syntax-highlighting
+        - firefox
+
+# Checklist to do:
+# - Need to enable iptables.service, sshd.service and fstrim.timer
+# - Need to disable avahi-daemon.service 
+# - Configure iptables for secure firewall
+# - Pull all stuff from GitHub repo (bin, config, fonts, wallpaper, bashrc)
+#   - Copy all bin into /usr/local/bin
+#   - Copy all config into ~/.config
+#   - Copy all fonts to /usr/share/fonts and run fc-cache -fv
+#   - Copy all wallpaper to ~/Pictures
+#   - Put bashrc in ~
