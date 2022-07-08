@@ -2,27 +2,34 @@
 - hosts: localhost
   connection: local
   become: true
-
   tasks:
+
   - name: Update the repository databases and upgrade the system packages.
+    tags: always
     pacman:
       update_cache: yes
       upgrade: yes
+    when: ansible_distribution == "Archlinux"
+
+- hosts: localhost
+  connection: local
+  become: true
+  tasks:
 
   - name: Remove some xfce4 package
+    tags: removep
     pacman:
       name: mousepad,parole,xfburn,xfce4-xkb-plugin,xfce4-dict,xfce4-mailwatch-plugin,xfce4-notes-plugin,xfce4-taskmanager
       state: absent
+    when: ansible_distribtuion == "Archlinux"
 
-  - name: Install package dependency for waldl
+  - name: Install additional packages
+    tags: installp
     package:
       name:
         - jq
         - curl
         - dmenu
-
-  - name: Install additional packages
-    package:
         - binutils
         - usbutils
         - net-tools
@@ -41,6 +48,7 @@
         - terminus-font
         - nano-syntax-highlighting
         - firefox
+      state: latest
 
 # Checklist to do:
 # - Need to enable iptables.service, sshd.service and fstrim.timer
