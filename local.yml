@@ -50,6 +50,29 @@
         - firefox
       state: latest
 
+- hosts: localhost
+  connection: local
+  become: true
+  tasks:
+
+  - name: Start system services
+    tags: enable
+    service:
+      name: "{{ items }}"
+      state: started
+      enabled: yes
+    with_items:
+      - 'iptables'
+      - 'sshd'
+      - 'fstrim'
+
+  - name: Disable system services
+    tags: disable
+    service:
+      name: avahi-daemon
+      state: stopped
+      enabled: no
+
 # Checklist to do:
 # - Need to enable iptables.service, sshd.service and fstrim.timer
 # - Need to disable avahi-daemon.service 
