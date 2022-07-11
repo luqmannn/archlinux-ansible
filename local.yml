@@ -89,12 +89,14 @@
   tasks:
 
   - name: Harden Linux sysctl settings
+    tags: sysctlset
     sysctl:
       name: "{{ item.name }}"
       value: "{{ item.value }}"
       sysctl_file: /usr/lib/sysctl.d/50-default.conf
       sysctl_set: yes
       state: present
+      reload: yes
     with_items:
       - { name: 'net.ipv4.tcp_syncookies', value: '1' }  # Enable syn flood protection
       - { name: 'net.ipv4.conf.all.secure_redirects', value: '1' }  # Ignore ICMP redirects from non-GW hosts
@@ -124,9 +126,19 @@
       - { name: 'net.ipv4.conf.default.send_redirects', value: 0}  # Don't allow traffic between networks or act as a router
       - { name: 'net.ipv4.icmp_echo_ignore_all', value: 0}  # Ignore bad ICMP errors
 
-#  - name: Reload ufw
-#    ufw:
-#      state: reloaded
+  - name: Setup firewall
+    tags: firewall
+    ufw:
+      state: enabled
+      policy: deny
+      logging: on
+
+  - name: Allow SSH traffic
+    tags: allowssh
+    ufw:
+      rule: allow
+      port: 22
+      proto: tcp
 
 # Checklist to do:
 # - Need to enable iptables.service, sshd.service and fstrim.timer
