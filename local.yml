@@ -8,8 +8,8 @@
     tags: always
     pacman:
       update_cache: yes
-      upgrade: yes
-    when: ansible_distribution == "Archlinux"
+      #upgrade: yes
+    when: ansible_distribution == "archlinux"
 
 - hosts: localhost
   connection: local
@@ -18,10 +18,18 @@
 
   - name: Remove some xfce4 package
     tags: removep
-    pacman:
-      name: mousepad,parole,xfburn,xfce4-xkb-plugin,xfce4-dict,xfce4-mailwatch-plugin,xfce4-notes-plugin,xfce4-taskmanager
+    package:
+      name:
+        - mousepad
+        - parole
+        - xfburn
+        - xfce4-xkb-plugin
+        - xfce4-dict
+        - xfce4-mailwatch-plugin
+        - xfce4-notes-plugin
+        - xfce4-taskmanager
       state: absent
-    when: ansible_distribtuion == "Archlinux"
+    when: ansible_distribution == "archlinux"
 
   - name: Install additional packages
     tags: installp
@@ -35,6 +43,7 @@
         - net-tools
         - traceroute
         - zip
+        - ufw
         - unzip
         - unrar
         - which
@@ -48,7 +57,8 @@
         - terminus-font
         - nano-syntax-highlighting
         - firefox
-      state: latest
+      state: present
+    when: ansible_distribution == "archlinux"
 
 - hosts: localhost
   connection: local
@@ -72,6 +82,51 @@
       name: avahi-daemon
       state: stopped
       enabled: no
+
+- hosts: localhost
+  connection: local
+  become: true
+  tasks:
+
+  - name: Harden Linux sysctl settings
+    sysctl:
+      name: "{{ item.name }}"
+      value: "{{ item.value }}"
+      sysctl_file: /usr/lib/sysctl.d/50-default.conf
+      sysctl_set: yes
+      state: present
+    with_items:
+      - { name: 'net.ipv4.tcp_syncookies', value: '1' }  # Enable syn flood protection
+      - { name: 'net.ipv4.conf.all.secure_redirects', value: '1' }  # Ignore ICMP redirects from non-GW hosts
+      - { name: 'net.ipv4.conf.default.secure_redirects', value: '1' }  # Ignore ICMP redirects from non-GW host
+      - { name: 'net.ipv4.conf.all.rp_filter', value: '1' }  # Reverse path filtering - IP spoofing protection
+      - { name: 'net.ipv4.conf.default.rp_filter', value: '1' }  # Reverse path filtering - IP spoofing protection
+      - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }  # Ignore ICMP broadcasts to avoid participating in Smurf attacks
+      - { name: 'net.ipv4.icmp_ignore_bogus_error_responses', value: '1'}  # Ignore bad ICMP errors
+      - { name: 'net.ipv4.conf.all.log_martians', value: '1' }  # Log spoofed, source-routed, and redirect packets
+      - { name: 'net.ipv4.conf.default.log_martians', value: '1' }  # Log spoofed, source-routed, and redirect packets
+      - { name: 'net.ipv4.tcp_rfc1337', value: '1'}  # Implement RFC 1337 fix
+      - { name: 'fs.protected_hardlinks', value: '1' }  # Provide protection from ToCToU races
+      - { name: 'fs.protected_symlinks', value: '1'}  # Provide protection from ToCToU races
+      - { name: 'kernel.kptr_restrict', value: '1'}  # Make locating kernel addresses more difficult
+
+      - { name: 'net.ipv4.conf.all.accept_source_route', value: '0'}  # Ignore source-routed packets
+      - { name: 'net.ipv6.conf.all.accept_source_route', value: '0'}  # IPv6 - Ignore ICMP redirects
+      - { name: 'net.ipv4.conf.default.accept_source_route', value: '0'}  # Ignore source-routed packets
+      - { name: 'net.ipv6.conf.default.accept_source_route', value: '0'}  # IPv6 - Ignore source-routed packets
+      - { name: 'net.ipv4.conf.all.accept_redirects', value: '0'}  # Ignore ICMP redirects
+      - { name: 'net.ipv6.conf.all.accept_redirects', value: '0'}  # IPv6 - Ignore ICMP redirects
+      - { name: 'net.ipv4.conf.default.accept_redirects', value: '0'}  # Ignore ICMP redirects
+      - { name: 'net.ipv6.conf.default.accept_redirects', value: '0'}  # IPv6 - Ignore ICMP redirects
+      - { name: 'net.ipv4.ip_forward', value: '0'}         # Do not allow traffic between networks or act as a router
+      - { name: 'net.ipv6.conf.all.forwarding', value: 0}  # IPv6 - Do not allow traffic between networks or act as a router
+      - { name: 'net.ipv4.conf.all.send_redirects', value: 0}  # Don't allow traffic between networks or act as a router
+      - { name: 'net.ipv4.conf.default.send_redirects', value: 0}  # Don't allow traffic between networks or act as a router
+      - { name: 'net.ipv4.icmp_echo_ignore_all', value: 0}  # Ignore bad ICMP errors
+
+#  - name: Reload ufw
+#    ufw:
+#      state: reloaded
 
 # Checklist to do:
 # - Need to enable iptables.service, sshd.service and fstrim.timer
