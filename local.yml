@@ -193,9 +193,6 @@
       state: enabled
 
 # Checklist to do:
-# - Need to enable iptables.service, sshd.service and fstrim.timer
-# - Need to disable avahi-daemon.service 
-# - Configure iptables for secure firewall
 # - Pull all stuff from GitHub repo (bin, config, fonts, wallpaper, bashrc)
 #   - Copy all bin into /usr/local/bin
 #   - Copy all config into ~/.config
